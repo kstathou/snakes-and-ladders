@@ -10,6 +10,9 @@
   --color-fremen: #7C9885;
   --color-sardaukar: #5C5C5C;
   --color-gold: #B8924A;
+
+  /* Use Barlow Condensed as the default font */
+  --font-sans: var(--font-barlow), ui-sans-serif, system-ui, sans-serif;
 }
 
 /* Arrakis Desert Planet Background */
