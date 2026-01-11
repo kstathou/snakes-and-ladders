@@ -249,20 +249,6 @@ export function Dice({ state, dispatch }: DiceProps) {
   // Normal Dice UI
   return (
     <div className="fixed bottom-8 right-8 flex flex-col items-center gap-4">
-      {/* Bonus roll indicator */}
-      <AnimatePresence>
-        {state.bonusRollPending && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="text-spice font-bold text-lg"
-          >
-            Bonus Roll!
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Dice */}
       {state.diceValue || state.isRolling ? (
         <motion.div
@@ -282,7 +268,6 @@ export function Dice({ state, dispatch }: DiceProps) {
           <D6Face
             value={state.isRolling ? null : state.diceValue}
             size={96}
-            highlight={state.diceValue === 6}
           />
         </motion.div>
       ) : (

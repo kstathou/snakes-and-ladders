@@ -17,7 +17,6 @@ export const initialState: GameState = {
   players: [createInitialPlayer('Player 1'), createInitialPlayer('Player 2')],
   currentPlayerIndex: 0,
   diceValue: null,
-  bonusRollPending: false,
   isRolling: false,
   winner: null,
   atreidesAbilityActive: false,
@@ -85,7 +84,6 @@ function applyDiceMove(state: GameState, value: number): GameState {
       players,
       diceValue: finalValue,
       isRolling: false,
-      bonusRollPending: finalValue === 6,
     }
   }
 
@@ -112,7 +110,6 @@ function applyDiceMove(state: GameState, value: number): GameState {
     players,
     diceValue: finalValue,
     isRolling: false,
-    bonusRollPending: finalValue === 6,
   }
 }
 
@@ -262,13 +259,6 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         return state
       }
 
-      if (state.bonusRollPending) {
-        return {
-          ...state,
-          bonusRollPending: false,
-          diceValue: null,
-        }
-      }
       return {
         ...state,
         currentPlayerIndex: state.currentPlayerIndex === 0 ? 1 : 0,

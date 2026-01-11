@@ -90,18 +90,6 @@ describe('gameReducer', () => {
       expect(newState.players[0].position).toBe(5)
     })
 
-    it('grants bonus roll on 6', () => {
-      const state = createPlayingState('sardaukar', 'sardaukar', {
-        players: [
-          { name: 'Player 1', faction: 'sardaukar', position: 0, abilityUsed: true },
-          { name: 'Player 2', faction: 'sardaukar', position: 0, abilityUsed: true },
-        ],
-      })
-      const newState = gameReducer(state, { type: 'SET_DICE_VALUE', value: 6 })
-
-      expect(newState.bonusRollPending).toBe(true)
-    })
-
     it('triggers win at 100', () => {
       const state = createPlayingState('sardaukar', 'sardaukar', {
         players: [
@@ -117,10 +105,9 @@ describe('gameReducer', () => {
   })
 
   describe('MOVE_COMPLETE', () => {
-    it('switches to next player when no bonus roll', () => {
+    it('switches to next player', () => {
       const state = createPlayingState('sardaukar', 'sardaukar', {
         currentPlayerIndex: 0,
-        bonusRollPending: false,
         players: [
           { name: 'Player 1', faction: 'sardaukar', position: 5, abilityUsed: true },
           { name: 'Player 2', faction: 'sardaukar', position: 0, abilityUsed: true },
@@ -129,21 +116,6 @@ describe('gameReducer', () => {
       const newState = gameReducer(state, { type: 'MOVE_COMPLETE' })
 
       expect(newState.currentPlayerIndex).toBe(1)
-    })
-
-    it('keeps same player on bonus roll', () => {
-      const state = createPlayingState('sardaukar', 'sardaukar', {
-        currentPlayerIndex: 0,
-        bonusRollPending: true,
-        players: [
-          { name: 'Player 1', faction: 'sardaukar', position: 6, abilityUsed: true },
-          { name: 'Player 2', faction: 'sardaukar', position: 0, abilityUsed: true },
-        ],
-      })
-      const newState = gameReducer(state, { type: 'MOVE_COMPLETE' })
-
-      expect(newState.currentPlayerIndex).toBe(0)
-      expect(newState.bonusRollPending).toBe(false)
     })
   })
 
@@ -306,7 +278,7 @@ describe('gameReducer', () => {
       })
       const newState = gameReducer(state, { type: 'SET_DICE_VALUE', value: 2 })
 
-      // Fremen stays at 99 (worm head) instead of sliding to 54
+      // Fremen stays at 99 (worm head) instead of sliding to 79
       expect(newState.players[0].position).toBe(99)
       expect(newState.players[0].abilityUsed).toBe(true)
     })
@@ -320,7 +292,7 @@ describe('gameReducer', () => {
       })
       const newState = gameReducer(state, { type: 'SET_DICE_VALUE', value: 2 })
 
-      expect(newState.players[0].position).toBe(54) // Slid down to worm tail
+      expect(newState.players[0].position).toBe(79) // Slid down to worm tail
     })
 
     it('non-Fremen always slides down worm', () => {
@@ -332,7 +304,7 @@ describe('gameReducer', () => {
       })
       const newState = gameReducer(state, { type: 'SET_DICE_VALUE', value: 2 })
 
-      expect(newState.players[0].position).toBe(54) // Slid down to worm tail
+      expect(newState.players[0].position).toBe(79) // Slid down to worm tail
     })
   })
 
@@ -362,19 +334,6 @@ describe('gameReducer', () => {
       const newState = gameReducer(state, { type: 'SET_DICE_VALUE', value: 3 })
 
       expect(newState.players[0].position).toBe(33) // Just 30 + 3, no bonus
-    })
-
-    it('grants bonus roll when modified result is 6', () => {
-      const state = createPlayingState('sardaukar', 'sardaukar', {
-        players: [
-          { name: 'Player 1', faction: 'sardaukar', position: 0, abilityUsed: false },
-          { name: 'Player 2', faction: 'sardaukar', position: 0, abilityUsed: true },
-        ],
-      })
-      const newState = gameReducer(state, { type: 'SET_DICE_VALUE', value: 4 })
-
-      expect(newState.players[0].position).toBe(6) // 4 + 2 = 6
-      expect(newState.bonusRollPending).toBe(true)
     })
   })
 

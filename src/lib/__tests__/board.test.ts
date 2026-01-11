@@ -35,8 +35,8 @@ describe('getSquarePosition', () => {
 
 describe('checkWorm', () => {
   it('returns tail position when landing on worm head', () => {
-    expect(checkWorm(99)).toBe(54)
-    expect(checkWorm(43)).toBe(17)
+    expect(checkWorm(99)).toBe(79)
+    expect(checkWorm(47)).toBe(28)
   })
 
   it('returns null when not on worm head', () => {
@@ -47,8 +47,8 @@ describe('checkWorm', () => {
 
 describe('checkOrnithopter', () => {
   it('returns destination when landing on ornithopter pad', () => {
-    expect(checkOrnithopter(4)).toBe(25)
-    expect(checkOrnithopter(71)).toBe(90)
+    expect(checkOrnithopter(3)).toBe(22)
+    expect(checkOrnithopter(69)).toBe(88)
   })
 
   it('returns null when not on pad', () => {
@@ -68,15 +68,15 @@ describe('calculateFinalPosition', () => {
 
   it('returns worm tail when landing on worm', () => {
     expect(calculateFinalPosition(99)).toEqual({
-      finalPosition: 54,
+      finalPosition: 79,
       wormTriggered: true,
       ornithopterTriggered: false,
     })
   })
 
   it('returns ornithopter destination when landing on pad', () => {
-    expect(calculateFinalPosition(4)).toEqual({
-      finalPosition: 25,
+    expect(calculateFinalPosition(3)).toEqual({
+      finalPosition: 22,
       wormTriggered: false,
       ornithopterTriggered: true,
     })

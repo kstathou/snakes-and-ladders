@@ -27,23 +27,26 @@ export const BOARD = {
   totalSquares: 100,
 } as const
 
-// Sandworm placements (head -> tail)
+// Sandworm placements (head -> tail, max 2 rows / 20 squares drop)
 export const WORMS = [
-  { head: 99, tail: 54 },
-  { head: 91, tail: 73 },
-  { head: 76, tail: 36 },
-  { head: 66, tail: 24 },
-  { head: 52, tail: 29 },
-  { head: 43, tail: 17 },
+  { head: 99, tail: 79 },
+  { head: 95, tail: 75 },
+  { head: 87, tail: 68 },
+  { head: 76, tail: 57 },
+  { head: 64, tail: 44 },
+  { head: 52, tail: 33 },
+  { head: 47, tail: 28 },
+  { head: 36, tail: 18 },
+  { head: 24, tail: 5 },
 ] as const
 
-// Ornithopter placements (pad -> destination)
+// Ornithopter placements (pad -> destination, max 2 rows / 20 squares boost)
 export const ORNITHOPTERS = [
-  { pad: 4, destination: 25 },
-  { pad: 13, destination: 46 },
-  { pad: 27, destination: 64 },
-  { pad: 40, destination: 59 },
-  { pad: 56, destination: 84 },
-  { pad: 61, destination: 81 },
-  { pad: 71, destination: 90 },
+  { pad: 3, destination: 22 },
+  { pad: 8, destination: 26 },
+  { pad: 17, destination: 35 },
+  { pad: 29, destination: 48 },
+  { pad: 41, destination: 59 },
+  { pad: 53, destination: 72 },
+  { pad: 69, destination: 88 },
 ] as const

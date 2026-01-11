@@ -14,7 +14,6 @@ export interface GameState {
   players: [Player, Player]
   currentPlayerIndex: 0 | 1
   diceValue: number | null
-  bonusRollPending: boolean
   isRolling: boolean
   winner: number | null
   atreidesAbilityActive: boolean // When true, next roll shows two dice to choose from
