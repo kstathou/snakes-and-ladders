@@ -163,8 +163,32 @@ describe('gameReducer', () => {
   // SKILL TESTS
 
   describe('Atreides Prescience ability', () => {
-    it('shows two dice options when Atreides rolls', () => {
+    it('does not auto-trigger on roll without activation', () => {
+      // Atreides rolls without activating ability - should move normally
+      const state = createPlayingState('atreides', 'sardaukar', {
+        players: [
+          { name: 'Player 1', faction: 'atreides', position: 30, abilityUsed: false },
+          { name: 'Player 2', faction: 'sardaukar', position: 0, abilityUsed: true },
+        ],
+      })
+      const newState = gameReducer(state, { type: 'SET_DICE_VALUE', value: 3 })
+
+      expect(newState.pendingAtreidesChoice).toBeNull()
+      expect(newState.players[0].position).toBe(33) // Normal move
+      expect(newState.players[0].abilityUsed).toBe(false) // Ability NOT used
+    })
+
+    it('activates prescience via ACTIVATE_ATREIDES_ABILITY', () => {
       const state = createPlayingState('atreides', 'sardaukar')
+      const newState = gameReducer(state, { type: 'ACTIVATE_ATREIDES_ABILITY' })
+
+      expect(newState.atreidesAbilityActive).toBe(true)
+    })
+
+    it('shows two dice options when ability is activated before roll', () => {
+      const state = createPlayingState('atreides', 'sardaukar', {
+        atreidesAbilityActive: true,
+      })
       const newState = gameReducer(state, { type: 'SET_DICE_VALUE', value: 4 })
 
       expect(newState.pendingAtreidesChoice).not.toBeNull()
@@ -172,6 +196,7 @@ describe('gameReducer', () => {
       expect(typeof newState.pendingAtreidesChoice?.dice2).toBe('number')
       expect(newState.isRolling).toBe(false)
       expect(newState.players[0].abilityUsed).toBe(true)
+      expect(newState.atreidesAbilityActive).toBe(false) // Reset after use
     })
 
     it('applies chosen dice value via ATREIDES_CHOICE', () => {
@@ -188,18 +213,16 @@ describe('gameReducer', () => {
       expect(newState.players[0].position).toBe(15) // 10 + 5
     })
 
-    it('does not trigger Prescience if ability already used', () => {
-      // Use position 30, rolling 3 = 33 (no worm/ornithopter)
+    it('does not activate if ability already used', () => {
       const state = createPlayingState('atreides', 'sardaukar', {
         players: [
           { name: 'Player 1', faction: 'atreides', position: 30, abilityUsed: true },
           { name: 'Player 2', faction: 'sardaukar', position: 0, abilityUsed: true },
         ],
       })
-      const newState = gameReducer(state, { type: 'SET_DICE_VALUE', value: 3 })
+      const newState = gameReducer(state, { type: 'ACTIVATE_ATREIDES_ABILITY' })
 
-      expect(newState.pendingAtreidesChoice).toBeNull()
-      expect(newState.players[0].position).toBe(33)
+      expect(newState.atreidesAbilityActive).toBe(false) // Can't activate
     })
   })
 

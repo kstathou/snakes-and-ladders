@@ -25,15 +25,27 @@ function canHarkonnenAttack(state: GameState, playerIndex: 0 | 1): boolean {
   return Math.abs(player.position - opponent.position) <= 6
 }
 
+// Check if Atreides can use their ability
+function canAtreidesActivate(state: GameState, playerIndex: 0 | 1): boolean {
+  const player = state.players[playerIndex]
+  if (player.faction !== 'atreides' || player.abilityUsed) return false
+  if (state.currentPlayerIndex !== playerIndex) return false
+  if (state.phase !== 'playing') return false
+  if (state.isRolling || state.diceValue !== null) return false
+  if (state.atreidesAbilityActive) return false // Already activated
+  return true
+}
+
 export function HUD({ state, dispatch, playerIndex }: HUDProps) {
   const player = state.players[playerIndex]
   const isCurrentPlayer = state.currentPlayerIndex === playerIndex
   const factionData = player.faction ? getFactionData(player.faction) : null
 
   const harkonnenCanAttack = canHarkonnenAttack(state, playerIndex)
+  const atreidesCanActivate = canAtreidesActivate(state, playerIndex)
 
   const handleAbilityClick = () => {
-    if (harkonnenCanAttack) {
+    if (harkonnenCanAttack || atreidesCanActivate) {
       dispatch({ type: 'USE_ABILITY', playerIndex })
     }
   }
@@ -126,6 +138,35 @@ export function HUD({ state, dispatch, playerIndex }: HUDProps) {
               `}
             >
               {harkonnenCanAttack ? 'Attack!' : 'Not in range'}
+            </motion.button>
+          )}
+
+          {/* Atreides prescience button */}
+          {player.faction === 'atreides' && !player.abilityUsed && isCurrentPlayer && (
+            <motion.button
+              onClick={handleAbilityClick}
+              disabled={!atreidesCanActivate}
+              animate={
+                atreidesCanActivate
+                  ? {
+                      boxShadow: [
+                        '0 0 0 0 rgba(30, 58, 95, 0)',
+                        '0 0 0 8px rgba(30, 58, 95, 0.3)',
+                        '0 0 0 0 rgba(30, 58, 95, 0)',
+                      ],
+                    }
+                  : {}
+              }
+              transition={{ repeat: Infinity, duration: 2 }}
+              className={`
+                mt-3 w-full px-3 py-2 rounded-lg text-sm font-semibold
+                transition-all
+                ${atreidesCanActivate
+                  ? 'bg-atreides text-white cursor-pointer hover:bg-atreides/80'
+                  : 'bg-sand/30 text-shadow/40 cursor-not-allowed'}
+              `}
+            >
+              {state.atreidesAbilityActive ? 'Prescience Active!' : atreidesCanActivate ? 'Use Prescience' : 'Roll first'}
             </motion.button>
           )}
         </div>

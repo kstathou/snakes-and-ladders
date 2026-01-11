@@ -20,6 +20,7 @@ export const initialState: GameState = {
   bonusRollPending: false,
   isRolling: false,
   winner: null,
+  atreidesAbilityActive: false,
   pendingAtreidesChoice: null,
   harkonnenAttackResult: null,
 }
@@ -153,11 +154,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'SET_DICE_VALUE': {
       const currentPlayer = state.players[state.currentPlayerIndex]
 
-      // Check if Atreides ability is active
-      if (
-        currentPlayer.faction === 'atreides' &&
-        !currentPlayer.abilityUsed
-      ) {
+      // Check if Atreides ability was manually activated
+      if (state.atreidesAbilityActive) {
         // Roll two dice for Atreides to choose from
         const dice1 = action.value
         const dice2 = Math.floor(Math.random() * 6) + 1
@@ -172,6 +170,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
           ...state,
           players,
           isRolling: false,
+          atreidesAbilityActive: false,
           pendingAtreidesChoice: { dice1, dice2 },
         }
       }
@@ -233,12 +232,28 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     }
 
     case 'USE_ABILITY': {
-      // This is now used for Harkonnen to trigger their attack
+      // Used by Harkonnen and Atreides to trigger their abilities
       const player = state.players[action.playerIndex]
       if (player.faction === 'harkonnen' && !player.abilityUsed) {
         return gameReducer(state, { type: 'HARKONNEN_ATTACK' })
       }
+      if (player.faction === 'atreides' && !player.abilityUsed) {
+        return gameReducer(state, { type: 'ACTIVATE_ATREIDES_ABILITY' })
+      }
       return state
+    }
+
+    case 'ACTIVATE_ATREIDES_ABILITY': {
+      const currentPlayer = state.players[state.currentPlayerIndex]
+      if (
+        currentPlayer.faction !== 'atreides' ||
+        currentPlayer.abilityUsed ||
+        state.currentPlayerIndex !== state.players.findIndex(p => p.faction === 'atreides')
+      ) {
+        return state
+      }
+      // Activate prescience - next roll will show two dice
+      return { ...state, atreidesAbilityActive: true }
     }
 
     case 'MOVE_COMPLETE': {

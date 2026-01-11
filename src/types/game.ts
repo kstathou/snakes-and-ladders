@@ -17,6 +17,7 @@ export interface GameState {
   bonusRollPending: boolean
   isRolling: boolean
   winner: number | null
+  atreidesAbilityActive: boolean // When true, next roll shows two dice to choose from
   pendingAtreidesChoice: { dice1: number; dice2: number } | null // For Atreides ability
   harkonnenAttackResult: number | null // Shows the result of Harkonnen's attack roll
 }
@@ -29,6 +30,7 @@ export type GameAction =
   | { type: 'SET_DICE_VALUE'; value: number }
   | { type: 'MOVE_COMPLETE' }
   | { type: 'USE_ABILITY'; playerIndex: 0 | 1 }
+  | { type: 'ACTIVATE_ATREIDES_ABILITY' }
   | { type: 'ATREIDES_CHOICE'; chosenValue: number }
   | { type: 'HARKONNEN_ATTACK' }
   | { type: 'DISMISS_HARKONNEN_RESULT' }
