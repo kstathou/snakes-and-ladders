@@ -8,10 +8,9 @@ import { getFactionData } from '@/lib/factions'
 interface PlayerPieceProps {
   player: Player
   playerIndex: 0 | 1
-  isCurrentPlayer: boolean
 }
 
-export function PlayerPiece({ player, playerIndex, isCurrentPlayer }: PlayerPieceProps) {
+export function PlayerPiece({ player, playerIndex }: PlayerPieceProps) {
   if (player.position === 0 || !player.faction) return null
 
   const { row, col } = getSquarePosition(player.position)

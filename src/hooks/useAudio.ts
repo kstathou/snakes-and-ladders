@@ -24,6 +24,7 @@ export function useAudio() {
 
   // Initialize sounds
   useEffect(() => {
+    const sounds = soundsRef.current
     Object.entries(SOUNDS).forEach(([name, src]) => {
       const howl = new Howl({
         src: [src],
@@ -34,11 +35,11 @@ export function useAudio() {
           console.debug(`Sound not found: ${src}`)
         },
       })
-      soundsRef.current.set(name as SoundName, howl)
+      sounds.set(name as SoundName, howl)
     })
 
     return () => {
-      soundsRef.current.forEach((howl) => howl.unload())
+      sounds.forEach((howl) => howl.unload())
     }
   }, [])
 

@@ -69,7 +69,7 @@ export function Victory({ state, dispatch }: VictoryProps) {
           transition={{ delay: 0.8 }}
           className="text-lg text-sand italic mb-12 max-w-md mx-auto"
         >
-          "He who controls the spice, controls the universe."
+          &ldquo;He who controls the spice, controls the universe.&rdquo;
         </motion.div>
 
         {/* Play again button */}

@@ -59,12 +59,10 @@ export function Board({ state, dispatch }: BoardProps) {
         <PlayerPiece
           player={state.players[0]}
           playerIndex={0}
-          isCurrentPlayer={state.currentPlayerIndex === 0}
         />
         <PlayerPiece
           player={state.players[1]}
           playerIndex={1}
-          isCurrentPlayer={state.currentPlayerIndex === 1}
         />
       </motion.div>
 
