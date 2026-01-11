@@ -56,7 +56,7 @@ export function useAudio() {
 
   const toggleMute = useCallback(() => {
     mutedRef.current = !mutedRef.current
-    return !mutedRef.current
+    return mutedRef.current
   }, [])
 
   return { play, setMuted, toggleMute, isMuted: () => mutedRef.current }
