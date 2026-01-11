@@ -163,6 +163,15 @@ export function Dice({ state, dispatch }: DiceProps) {
   const hasPendingChoice = state.pendingAtreidesChoice || state.harkonnenAttackResult
   const canRoll = state.phase === 'playing' && !state.isRolling && !hasPendingChoice
 
+  // Handler for Atreides dice choice
+  const handleAtreidesChoice = (chosenValue: number) => {
+    dispatch({ type: 'ATREIDES_CHOICE', chosenValue })
+    // Schedule MOVE_COMPLETE after the choice is applied
+    setTimeout(() => {
+      dispatch({ type: 'MOVE_COMPLETE' })
+    }, TIMING.moveComplete)
+  }
+
   // Atreides Prescience Choice UI
   if (state.pendingAtreidesChoice) {
     const { dice1, dice2 } = state.pendingAtreidesChoice
@@ -185,12 +194,12 @@ export function Dice({ state, dispatch }: DiceProps) {
             <div className="flex gap-4 justify-center">
               <D6Face
                 value={dice1}
-                onClick={() => dispatch({ type: 'ATREIDES_CHOICE', chosenValue: dice1 })}
+                onClick={() => handleAtreidesChoice(dice1)}
                 highlight={dice1 === 6}
               />
               <D6Face
                 value={dice2}
-                onClick={() => dispatch({ type: 'ATREIDES_CHOICE', chosenValue: dice2 })}
+                onClick={() => handleAtreidesChoice(dice2)}
                 highlight={dice2 === 6}
               />
             </div>
