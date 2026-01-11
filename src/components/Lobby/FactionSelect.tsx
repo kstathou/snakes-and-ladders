@@ -33,7 +33,7 @@ export function FactionSelect({
             whileTap={!isDisabled ? { scale: 0.95 } : undefined}
             className={`
               p-4 rounded-lg border-2 text-left transition-colors
-              ${isSelected ? 'border-spice bg-sand/30' : 'border-sand/50 bg-sand/10'}
+              ${isSelected ? 'border-spice bg-black/50' : 'border-sand/50 bg-black/30'}
               ${isDisabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:border-spice/70'}
             `}
             style={{
@@ -46,7 +46,7 @@ export function FactionSelect({
             >
               {data.name}
             </div>
-            <div className="text-sm text-shadow mt-1">
+            <div className="text-sm text-sand/90 mt-1">
               <span className="font-semibold">{data.abilityName}:</span>{' '}
               {data.abilityDescription}
             </div>

@@ -54,15 +54,15 @@ export function HUD({ state, dispatch, playerIndex }: HUDProps) {
     <motion.div
       animate={{
         scale: isCurrentPlayer ? 1.02 : 1,
-        opacity: isCurrentPlayer ? 1 : 0.7,
+        opacity: isCurrentPlayer ? 1 : 0.8,
       }}
       className={`
-        w-52 p-4 rounded-xl border-2 transition-colors
-        ${isCurrentPlayer ? 'border-spice bg-sand/30' : 'border-sand/50 bg-sand/20'}
+        w-52 p-4 rounded-xl border-2 transition-colors backdrop-blur-sm
+        ${isCurrentPlayer ? 'border-spice bg-black/70' : 'border-sand/50 bg-black/60'}
       `}
     >
       {/* Player name */}
-      <div className="font-bold text-lg text-shadow">{player.name}</div>
+      <div className="font-bold text-lg text-sand">{player.name}</div>
 
       {/* Faction */}
       {factionData && (
@@ -75,7 +75,7 @@ export function HUD({ state, dispatch, playerIndex }: HUDProps) {
       )}
 
       {/* Position */}
-      <div className="mt-3 text-sm text-shadow/80">
+      <div className="mt-3 text-sm text-sand/80">
         Position: <span className="font-bold text-spice">{player.position}</span>
       </div>
 
@@ -96,19 +96,19 @@ export function HUD({ state, dispatch, playerIndex }: HUDProps) {
           <div className="flex items-center justify-between">
             <span
               className={`font-semibold text-sm ${
-                player.abilityUsed ? 'text-shadow/40 line-through' : ''
+                player.abilityUsed ? 'text-sand/40 line-through' : ''
               }`}
               style={{ color: player.abilityUsed ? undefined : factionData.color }}
             >
               {factionData.abilityName}
             </span>
             {player.abilityUsed ? (
-              <span className="text-xs text-shadow/40">Used</span>
+              <span className="text-xs text-sand/40">Used</span>
             ) : (
               <span className="text-xs text-spice">Ready</span>
             )}
           </div>
-          <p className="text-xs text-shadow/60 mt-1 leading-relaxed">
+          <p className="text-xs text-sand/70 mt-1 leading-relaxed">
             {factionData.abilityDescription}
           </p>
 

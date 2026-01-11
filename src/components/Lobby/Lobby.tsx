@@ -16,13 +16,13 @@ export function Lobby({ state, dispatch }: LobbyProps) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full max-w-4xl"
+      className="w-full max-w-4xl bg-black/60 backdrop-blur-sm rounded-2xl p-8 border border-sand/30 shadow-2xl"
     >
       {/* Title */}
       <motion.h1
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-6xl font-bold text-center text-shadow mb-2"
+        className="text-6xl font-bold text-center text-sand mb-2 drop-shadow-lg"
       >
         DUNE
       </motion.h1>
@@ -39,7 +39,7 @@ export function Lobby({ state, dispatch }: LobbyProps) {
       <div className="grid grid-cols-2 gap-12">
         {/* Player 1 */}
         <div>
-          <h3 className="text-xl font-semibold text-shadow mb-4">Player 1</h3>
+          <h3 className="text-xl font-semibold text-sand mb-4">Player 1</h3>
           <input
             type="text"
             placeholder="Enter name..."
@@ -51,8 +51,8 @@ export function Lobby({ state, dispatch }: LobbyProps) {
                 name: e.target.value,
               })
             }
-            className="w-full p-3 mb-4 bg-sand/20 border border-sand rounded-lg
-                       text-shadow placeholder:text-shadow/50 focus:outline-none
+            className="w-full p-3 mb-4 bg-black/40 border border-sand/50 rounded-lg
+                       text-sand placeholder:text-sand/50 focus:outline-none
                        focus:border-spice"
           />
           <FactionSelect
@@ -66,7 +66,7 @@ export function Lobby({ state, dispatch }: LobbyProps) {
 
         {/* Player 2 */}
         <div>
-          <h3 className="text-xl font-semibold text-shadow mb-4">Player 2</h3>
+          <h3 className="text-xl font-semibold text-sand mb-4">Player 2</h3>
           <input
             type="text"
             placeholder="Enter name..."
@@ -78,8 +78,8 @@ export function Lobby({ state, dispatch }: LobbyProps) {
                 name: e.target.value,
               })
             }
-            className="w-full p-3 mb-4 bg-sand/20 border border-sand rounded-lg
-                       text-shadow placeholder:text-shadow/50 focus:outline-none
+            className="w-full p-3 mb-4 bg-black/40 border border-sand/50 rounded-lg
+                       text-sand placeholder:text-sand/50 focus:outline-none
                        focus:border-spice"
           />
           <FactionSelect
@@ -103,7 +103,7 @@ export function Lobby({ state, dispatch }: LobbyProps) {
           transition-all
           ${canStart
             ? 'bg-spice text-white cursor-pointer hover:bg-spice/90'
-            : 'bg-sand/30 text-shadow/50 cursor-not-allowed'}
+            : 'bg-sand/30 text-sand/50 cursor-not-allowed'}
         `}
       >
         Begin Journey
