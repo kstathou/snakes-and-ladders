@@ -14,7 +14,7 @@ export const FACTIONS: Record<Faction, FactionData> = {
     name: 'House Atreides',
     color: COLORS.atreides,
     abilityName: 'Prescience',
-    abilityDescription: 'See dice result before rolling; choose to keep or reroll once',
+    abilityDescription: 'Roll two dice and choose which one to play',
     abilityTiming: 'before_roll',
   },
   harkonnen: {

@@ -3,7 +3,6 @@
 import { motion } from 'framer-motion'
 import { GameState, GameAction } from '@/types/game'
 import { getFactionData } from '@/lib/factions'
-import { AbilityButton } from '@/components/AbilityButton'
 
 interface HUDProps {
   state: GameState
@@ -23,7 +22,7 @@ export function HUD({ state, dispatch, playerIndex }: HUDProps) {
         opacity: isCurrentPlayer ? 1 : 0.7,
       }}
       className={`
-        w-48 p-4 rounded-xl border-2 transition-colors
+        w-52 p-4 rounded-xl border-2 transition-colors
         ${isCurrentPlayer ? 'border-spice bg-sand/30' : 'border-sand/50 bg-sand/20'}
       `}
     >
@@ -46,7 +45,7 @@ export function HUD({ state, dispatch, playerIndex }: HUDProps) {
       </div>
 
       {/* Current turn indicator */}
-      {isCurrentPlayer && (
+      {isCurrentPlayer && state.phase === 'playing' && (
         <motion.div
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ repeat: Infinity, duration: 1.5 }}
@@ -56,14 +55,29 @@ export function HUD({ state, dispatch, playerIndex }: HUDProps) {
         </motion.div>
       )}
 
-      {/* Ability button */}
-      <AbilityButton
-        player={player}
-        playerIndex={playerIndex}
-        isCurrentPlayer={isCurrentPlayer}
-        canUse={!state.isRolling}
-        dispatch={dispatch}
-      />
+      {/* Ability section */}
+      {factionData && (
+        <div className="mt-4 pt-3 border-t border-sand/30">
+          <div className="flex items-center justify-between">
+            <span
+              className={`font-semibold text-sm ${
+                player.abilityUsed ? 'text-shadow/40 line-through' : ''
+              }`}
+              style={{ color: player.abilityUsed ? undefined : factionData.color }}
+            >
+              {factionData.abilityName}
+            </span>
+            {player.abilityUsed ? (
+              <span className="text-xs text-shadow/40">Used</span>
+            ) : (
+              <span className="text-xs text-spice">Ready</span>
+            )}
+          </div>
+          <p className="text-xs text-shadow/60 mt-1 leading-relaxed">
+            {factionData.abilityDescription}
+          </p>
+        </div>
+      )}
     </motion.div>
   )
 }

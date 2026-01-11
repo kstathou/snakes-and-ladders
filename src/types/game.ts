@@ -18,6 +18,9 @@ export interface GameState {
   isRolling: boolean
   winner: number | null
   pendingWormChoice: boolean // For Fremen ability prompt
+  pendingAtreidesChoice: { dice1: number; dice2: number } | null // For Atreides ability
+  pendingHarkonnenSabotage: boolean // For Harkonnen ability
+  lastOpponentRoll: number | null // For Harkonnen to sabotage
 }
 
 export type GameAction =
@@ -29,4 +32,7 @@ export type GameAction =
   | { type: 'MOVE_COMPLETE' }
   | { type: 'USE_ABILITY'; playerIndex: 0 | 1 }
   | { type: 'FREMEN_CHOICE'; rideWorm: boolean }
+  | { type: 'ATREIDES_CHOICE'; chosenValue: number }
+  | { type: 'HARKONNEN_SABOTAGE' }
+  | { type: 'HARKONNEN_DECLINE' }
   | { type: 'RESET_GAME' }
