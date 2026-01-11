@@ -1,7 +1,6 @@
 'use client'
 
-import { useCallback, useRef, useEffect } from 'react'
-import { Howl } from 'howler'
+import { useCallback, useRef } from 'react'
 
 // Sound configuration - paths are placeholders
 // Replace with actual sound files when available
@@ -18,37 +17,16 @@ const SOUNDS = {
 
 type SoundName = keyof typeof SOUNDS
 
+// Set to true once actual sound files are added to /public/sounds/
+const SOUNDS_ENABLED = false
+
 export function useAudio() {
-  const soundsRef = useRef<Map<SoundName, Howl>>(new Map())
   const mutedRef = useRef(true) // Muted by default
 
-  // Initialize sounds
-  useEffect(() => {
-    const sounds = soundsRef.current
-    Object.entries(SOUNDS).forEach(([name, src]) => {
-      const howl = new Howl({
-        src: [src],
-        volume: 0.5,
-        preload: true,
-        onloaderror: () => {
-          // Silently fail if sound file doesn't exist
-          console.debug(`Sound not found: ${src}`)
-        },
-      })
-      sounds.set(name as SoundName, howl)
-    })
-
-    return () => {
-      sounds.forEach((howl) => howl.unload())
-    }
-  }, [])
-
-  const play = useCallback((name: SoundName) => {
-    if (mutedRef.current) return
-    const sound = soundsRef.current.get(name)
-    if (sound) {
-      sound.play()
-    }
+  // No-op play function when sounds are disabled
+  const play = useCallback((_name: SoundName) => {
+    if (!SOUNDS_ENABLED) return
+    // Sound loading will be implemented when sound files are added
   }, [])
 
   const setMuted = useCallback((muted: boolean) => {

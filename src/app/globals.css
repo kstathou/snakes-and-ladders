@@ -12,8 +12,67 @@
   --color-gold: #B8924A;
 }
 
+/* Arrakis Desert Planet Background */
 body {
-  background-color: var(--color-sky);
-  color: var(--color-shadow);
   min-height: 100vh;
+  color: var(--color-shadow);
+  background:
+    /* Top layer: subtle noise texture */
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"),
+    /* Middle layer: warm gradient simulating desert heat haze */
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(230, 180, 120, 0.4) 0%, transparent 50%),
+    /* Sun glow effect */
+    radial-gradient(circle at 85% 15%, rgba(255, 200, 100, 0.3) 0%, transparent 25%),
+    /* Base gradient: deep desert colors */
+    linear-gradient(
+      180deg,
+      #E8D4B8 0%,      /* Pale sky */
+      #D4B896 15%,     /* Dusty horizon */
+      #C4A882 30%,     /* Light sand */
+      #B8956E 50%,     /* Warm sand */
+      #A67B5B 70%,     /* Deep sand */
+      #8B6347 85%,     /* Shadow sand */
+      #6B4A32 100%     /* Desert shadow */
+    );
+  background-attachment: fixed;
+  background-blend-mode: overlay, normal, normal, normal;
+}
+
+/* Sand dune wave pattern overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      -5deg,
+      transparent 0px,
+      transparent 80px,
+      rgba(139, 99, 71, 0.05) 80px,
+      rgba(139, 99, 71, 0.05) 82px
+    ),
+    repeating-linear-gradient(
+      5deg,
+      transparent 0px,
+      transparent 120px,
+      rgba(166, 123, 91, 0.03) 120px,
+      rgba(166, 123, 91, 0.03) 122px
+    );
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Subtle vignette effect for atmosphere */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 0%,
+    transparent 60%,
+    rgba(59, 41, 20, 0.15) 100%
+  );
+  pointer-events: none;
+  z-index: -1;
 }

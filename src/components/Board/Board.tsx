@@ -5,6 +5,7 @@ import { GameState, GameAction } from '@/types/game'
 import { getSquarePosition } from '@/lib/board'
 import { BOARD } from '@/lib/constants'
 import { Square } from './Square'
+import { BoardOverlay } from './BoardOverlay'
 import { Dice } from '@/components/Dice'
 import { HUD } from '@/components/HUD'
 import { PlayerPiece } from '@/components/PlayerPiece'
@@ -47,13 +48,17 @@ export function Board({ state, dispatch }: BoardProps) {
       >
         {/* Grid */}
         <div
-          className="grid bg-sand/30 border-4 border-sand rounded-lg overflow-hidden"
+          className="grid border-4 border-spice/50 rounded-lg overflow-hidden shadow-2xl"
           style={{
             gridTemplateColumns: `repeat(${BOARD.size}, 1fr)`,
+            background: 'linear-gradient(135deg, #D4B896 0%, #C2956E 50%, #A67B5B 100%)',
           }}
         >
           {squares}
         </div>
+
+        {/* Worms and Ornithopters overlay */}
+        <BoardOverlay />
 
         {/* Player Pieces */}
         <PlayerPiece
