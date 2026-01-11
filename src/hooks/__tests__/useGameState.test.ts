@@ -164,7 +164,7 @@ describe('gameReducer', () => {
 
   describe('Atreides Prescience ability', () => {
     it('shows two dice options when Atreides rolls', () => {
-      const state = createPlayingState('atreides', 'harkonnen')
+      const state = createPlayingState('atreides', 'sardaukar')
       const newState = gameReducer(state, { type: 'SET_DICE_VALUE', value: 4 })
 
       expect(newState.pendingAtreidesChoice).not.toBeNull()
@@ -175,11 +175,11 @@ describe('gameReducer', () => {
     })
 
     it('applies chosen dice value via ATREIDES_CHOICE', () => {
-      const state = createPlayingState('atreides', 'harkonnen', {
+      const state = createPlayingState('atreides', 'sardaukar', {
         pendingAtreidesChoice: { dice1: 3, dice2: 5 },
         players: [
           { name: 'Player 1', faction: 'atreides', position: 10, abilityUsed: true },
-          { name: 'Player 2', faction: 'harkonnen', position: 0, abilityUsed: false },
+          { name: 'Player 2', faction: 'sardaukar', position: 0, abilityUsed: true },
         ],
       })
       const newState = gameReducer(state, { type: 'ATREIDES_CHOICE', chosenValue: 5 })
@@ -204,142 +204,123 @@ describe('gameReducer', () => {
   })
 
   describe('Harkonnen Sabotage ability', () => {
-    it('triggers sabotage choice when opponent rolls and Harkonnen has ability', () => {
-      const state = createPlayingState('atreides', 'harkonnen', {
+    it('attacks opponent when within 6 squares', () => {
+      const state = createPlayingState('harkonnen', 'sardaukar', {
         currentPlayerIndex: 0,
         players: [
-          { name: 'Player 1', faction: 'atreides', position: 0, abilityUsed: true },
-          { name: 'Player 2', faction: 'harkonnen', position: 0, abilityUsed: false },
+          { name: 'Player 1', faction: 'harkonnen', position: 20, abilityUsed: false },
+          { name: 'Player 2', faction: 'sardaukar', position: 23, abilityUsed: true },
         ],
       })
-      const newState = gameReducer(state, { type: 'SET_DICE_VALUE', value: 5 })
+      const newState = gameReducer(state, { type: 'HARKONNEN_ATTACK' })
 
-      expect(newState.pendingHarkonnenSabotage).toBe(true)
-      expect(newState.lastOpponentRoll).toBe(5)
-      expect(newState.players[0].position).toBe(5) // Moved provisionally
+      expect(newState.harkonnenAttackResult).toBeGreaterThanOrEqual(1)
+      expect(newState.harkonnenAttackResult).toBeLessThanOrEqual(6)
+      expect(newState.players[0].abilityUsed).toBe(true)
+      // Opponent position should be reduced by attack roll
+      expect(newState.players[1].position).toBeLessThan(23)
     })
 
-    it('reverts position and rerolls when Harkonnen uses sabotage', () => {
-      const state = createPlayingState('atreides', 'harkonnen', {
+    it('does not attack if not within 6 squares', () => {
+      const state = createPlayingState('harkonnen', 'sardaukar', {
         currentPlayerIndex: 0,
-        pendingHarkonnenSabotage: true,
-        lastOpponentRoll: 5,
-        diceValue: 5,
         players: [
-          { name: 'Player 1', faction: 'atreides', position: 5, abilityUsed: true },
-          { name: 'Player 2', faction: 'harkonnen', position: 0, abilityUsed: false },
+          { name: 'Player 1', faction: 'harkonnen', position: 10, abilityUsed: false },
+          { name: 'Player 2', faction: 'sardaukar', position: 30, abilityUsed: true },
         ],
       })
-      const newState = gameReducer(state, { type: 'HARKONNEN_SABOTAGE' })
+      const newState = gameReducer(state, { type: 'HARKONNEN_ATTACK' })
 
-      expect(newState.pendingHarkonnenSabotage).toBe(false)
-      expect(newState.players[1].abilityUsed).toBe(true) // Harkonnen used ability
-      // Position should be the new roll result (can't predict exact value)
-      expect(newState.players[0].position).toBeGreaterThanOrEqual(1)
-      expect(newState.players[0].position).toBeLessThanOrEqual(6)
+      expect(newState.harkonnenAttackResult).toBeNull()
+      expect(newState.players[0].abilityUsed).toBe(false)
+      expect(newState.players[1].position).toBe(30) // Unchanged
     })
 
-    it('continues normally when Harkonnen declines sabotage', () => {
-      const state = createPlayingState('atreides', 'harkonnen', {
+    it('does not attack if ability already used', () => {
+      const state = createPlayingState('harkonnen', 'sardaukar', {
         currentPlayerIndex: 0,
-        pendingHarkonnenSabotage: true,
-        lastOpponentRoll: 5,
-        diceValue: 5,
         players: [
-          { name: 'Player 1', faction: 'atreides', position: 5, abilityUsed: true },
-          { name: 'Player 2', faction: 'harkonnen', position: 0, abilityUsed: false },
+          { name: 'Player 1', faction: 'harkonnen', position: 20, abilityUsed: true },
+          { name: 'Player 2', faction: 'sardaukar', position: 23, abilityUsed: true },
         ],
       })
-      const newState = gameReducer(state, { type: 'HARKONNEN_DECLINE' })
+      const newState = gameReducer(state, { type: 'HARKONNEN_ATTACK' })
 
-      expect(newState.pendingHarkonnenSabotage).toBe(false)
-      expect(newState.lastOpponentRoll).toBeNull()
-      expect(newState.players[0].position).toBe(5) // Position unchanged
-      expect(newState.players[1].abilityUsed).toBe(false) // Ability not used
+      expect(newState.harkonnenAttackResult).toBeNull()
     })
 
-    it('does not trigger sabotage if Harkonnen already used ability', () => {
-      const state = createPlayingState('atreides', 'harkonnen', {
+    it('does not push opponent below position 1', () => {
+      const state = createPlayingState('harkonnen', 'sardaukar', {
         currentPlayerIndex: 0,
         players: [
-          { name: 'Player 1', faction: 'atreides', position: 0, abilityUsed: true },
-          { name: 'Player 2', faction: 'harkonnen', position: 0, abilityUsed: true },
+          { name: 'Player 1', faction: 'harkonnen', position: 3, abilityUsed: false },
+          { name: 'Player 2', faction: 'sardaukar', position: 2, abilityUsed: true },
         ],
       })
-      const newState = gameReducer(state, { type: 'SET_DICE_VALUE', value: 5 })
+      const newState = gameReducer(state, { type: 'HARKONNEN_ATTACK' })
 
-      expect(newState.pendingHarkonnenSabotage).toBe(false)
+      expect(newState.players[1].position).toBeGreaterThanOrEqual(1)
+    })
+
+    it('dismisses attack result with DISMISS_HARKONNEN_RESULT', () => {
+      const state = createPlayingState('harkonnen', 'sardaukar', {
+        harkonnenAttackResult: 4,
+      })
+      const newState = gameReducer(state, { type: 'DISMISS_HARKONNEN_RESULT' })
+
+      expect(newState.harkonnenAttackResult).toBeNull()
     })
   })
 
   describe('Fremen Worm Rider ability', () => {
-    it('triggers worm choice when Fremen lands on worm head', () => {
+    it('stays at worm head when Fremen lands on worm for first time', () => {
       // Position 97 + 2 = 99, which is a worm head
-      const state = createPlayingState('fremen', 'atreides', {
+      const state = createPlayingState('fremen', 'sardaukar', {
         players: [
           { name: 'Player 1', faction: 'fremen', position: 97, abilityUsed: false },
-          { name: 'Player 2', faction: 'atreides', position: 0, abilityUsed: true },
+          { name: 'Player 2', faction: 'sardaukar', position: 0, abilityUsed: true },
         ],
       })
       const newState = gameReducer(state, { type: 'SET_DICE_VALUE', value: 2 })
 
-      expect(newState.pendingWormChoice).toBe(true)
-      expect(newState.players[0].position).toBe(99) // At worm head
-    })
-
-    it('rides worm forward when Fremen chooses to ride', () => {
-      // Worm at 99 -> 54, distance = 45, riding forward = 99 + 45 = 144 capped at 100
-      const state = createPlayingState('fremen', 'atreides', {
-        pendingWormChoice: true,
-        diceValue: 2,
-        players: [
-          { name: 'Player 1', faction: 'fremen', position: 99, abilityUsed: false },
-          { name: 'Player 2', faction: 'atreides', position: 0, abilityUsed: true },
-        ],
-      })
-      const newState = gameReducer(state, { type: 'FREMEN_CHOICE', rideWorm: true })
-
-      expect(newState.pendingWormChoice).toBe(false)
+      // Fremen stays at 99 (worm head) instead of sliding to 54
+      expect(newState.players[0].position).toBe(99)
       expect(newState.players[0].abilityUsed).toBe(true)
-      // Should win because 99 + 45 > 100
-      expect(newState.phase).toBe('victory')
-      expect(newState.winner).toBe(0)
     })
 
-    it('falls down worm when Fremen declines to ride', () => {
-      // Worm at 99 -> 54
-      const state = createPlayingState('fremen', 'atreides', {
-        pendingWormChoice: true,
-        diceValue: 2,
-        players: [
-          { name: 'Player 1', faction: 'fremen', position: 99, abilityUsed: false },
-          { name: 'Player 2', faction: 'atreides', position: 0, abilityUsed: true },
-        ],
-      })
-      const newState = gameReducer(state, { type: 'FREMEN_CHOICE', rideWorm: false })
-
-      expect(newState.pendingWormChoice).toBe(false)
-      expect(newState.players[0].position).toBe(54) // Fell down to tail
-      expect(newState.players[0].abilityUsed).toBe(false) // Ability not used
-    })
-
-    it('does not trigger worm choice if ability already used', () => {
-      const state = createPlayingState('fremen', 'atreides', {
+    it('slides down worm if ability already used', () => {
+      const state = createPlayingState('fremen', 'sardaukar', {
         players: [
           { name: 'Player 1', faction: 'fremen', position: 97, abilityUsed: true },
-          { name: 'Player 2', faction: 'atreides', position: 0, abilityUsed: true },
+          { name: 'Player 2', faction: 'sardaukar', position: 0, abilityUsed: true },
         ],
       })
       const newState = gameReducer(state, { type: 'SET_DICE_VALUE', value: 2 })
 
-      expect(newState.pendingWormChoice).toBe(false)
-      expect(newState.players[0].position).toBe(54) // Fell directly
+      expect(newState.players[0].position).toBe(54) // Slid down to worm tail
+    })
+
+    it('non-Fremen always slides down worm', () => {
+      const state = createPlayingState('sardaukar', 'sardaukar', {
+        players: [
+          { name: 'Player 1', faction: 'sardaukar', position: 97, abilityUsed: true },
+          { name: 'Player 2', faction: 'sardaukar', position: 0, abilityUsed: true },
+        ],
+      })
+      const newState = gameReducer(state, { type: 'SET_DICE_VALUE', value: 2 })
+
+      expect(newState.players[0].position).toBe(54) // Slid down to worm tail
     })
   })
 
   describe('Sardaukar Forced March ability', () => {
     it('adds +2 to dice result on first roll', () => {
-      const state = createPlayingState('sardaukar', 'atreides')
+      const state = createPlayingState('sardaukar', 'sardaukar', {
+        players: [
+          { name: 'Player 1', faction: 'sardaukar', position: 0, abilityUsed: false },
+          { name: 'Player 2', faction: 'sardaukar', position: 0, abilityUsed: true },
+        ],
+      })
       const newState = gameReducer(state, { type: 'SET_DICE_VALUE', value: 3 })
 
       expect(newState.players[0].position).toBe(5) // 3 + 2 = 5
@@ -361,7 +342,12 @@ describe('gameReducer', () => {
     })
 
     it('grants bonus roll when modified result is 6', () => {
-      const state = createPlayingState('sardaukar', 'atreides')
+      const state = createPlayingState('sardaukar', 'sardaukar', {
+        players: [
+          { name: 'Player 1', faction: 'sardaukar', position: 0, abilityUsed: false },
+          { name: 'Player 2', faction: 'sardaukar', position: 0, abilityUsed: true },
+        ],
+      })
       const newState = gameReducer(state, { type: 'SET_DICE_VALUE', value: 4 })
 
       expect(newState.players[0].position).toBe(6) // 4 + 2 = 6
@@ -370,19 +356,8 @@ describe('gameReducer', () => {
   })
 
   describe('skill interaction edge cases', () => {
-    it('does not allow MOVE_COMPLETE during pending worm choice', () => {
-      const state = createPlayingState('fremen', 'atreides', {
-        pendingWormChoice: true,
-        currentPlayerIndex: 0,
-      })
-      const newState = gameReducer(state, { type: 'MOVE_COMPLETE' })
-
-      expect(newState.pendingWormChoice).toBe(true) // Unchanged
-      expect(newState.currentPlayerIndex).toBe(0) // Turn not switched
-    })
-
     it('does not allow MOVE_COMPLETE during pending Atreides choice', () => {
-      const state = createPlayingState('atreides', 'harkonnen', {
+      const state = createPlayingState('atreides', 'sardaukar', {
         pendingAtreidesChoice: { dice1: 3, dice2: 5 },
         currentPlayerIndex: 0,
       })
@@ -391,14 +366,14 @@ describe('gameReducer', () => {
       expect(newState.pendingAtreidesChoice).not.toBeNull() // Unchanged
     })
 
-    it('does not allow MOVE_COMPLETE during pending Harkonnen sabotage', () => {
-      const state = createPlayingState('atreides', 'harkonnen', {
-        pendingHarkonnenSabotage: true,
+    it('does not allow MOVE_COMPLETE during pending Harkonnen result', () => {
+      const state = createPlayingState('harkonnen', 'sardaukar', {
+        harkonnenAttackResult: 4,
         currentPlayerIndex: 0,
       })
       const newState = gameReducer(state, { type: 'MOVE_COMPLETE' })
 
-      expect(newState.pendingHarkonnenSabotage).toBe(true) // Unchanged
+      expect(newState.harkonnenAttackResult).toBe(4) // Unchanged
     })
   })
 })

@@ -11,12 +11,84 @@ interface DiceProps {
   dispatch: React.Dispatch<GameAction>
 }
 
-// Dice face component for showing numbers
-function DiceFace({ value, onClick, selected, disabled }: {
-  value: number
+// D6 Pip positions for each face value
+const PIP_LAYOUTS: Record<number, Array<{ x: number; y: number }>> = {
+  1: [{ x: 50, y: 50 }],
+  2: [{ x: 25, y: 25 }, { x: 75, y: 75 }],
+  3: [{ x: 25, y: 25 }, { x: 50, y: 50 }, { x: 75, y: 75 }],
+  4: [{ x: 25, y: 25 }, { x: 75, y: 25 }, { x: 25, y: 75 }, { x: 75, y: 75 }],
+  5: [{ x: 25, y: 25 }, { x: 75, y: 25 }, { x: 50, y: 50 }, { x: 25, y: 75 }, { x: 75, y: 75 }],
+  6: [{ x: 25, y: 25 }, { x: 75, y: 25 }, { x: 25, y: 50 }, { x: 75, y: 50 }, { x: 25, y: 75 }, { x: 75, y: 75 }],
+}
+
+// D6 Die Face component with pips
+function D6Face({ value, size = 64, onClick, disabled, highlight }: {
+  value: number | null
+  size?: number
   onClick?: () => void
-  selected?: boolean
   disabled?: boolean
+  highlight?: boolean
+}) {
+  const pips = value ? PIP_LAYOUTS[value] || [] : []
+  const pipSize = size * 0.15
+
+  return (
+    <motion.button
+      onClick={onClick}
+      disabled={disabled}
+      whileHover={!disabled && onClick ? { scale: 1.1 } : undefined}
+      whileTap={!disabled && onClick ? { scale: 0.95 } : undefined}
+      className={`
+        relative rounded-xl shadow-lg
+        flex items-center justify-center
+        transition-all
+        ${disabled ? 'opacity-50 cursor-not-allowed' : onClick ? 'cursor-pointer' : ''}
+        ${highlight ? 'ring-4 ring-gold ring-opacity-75' : ''}
+      `}
+      style={{
+        width: size,
+        height: size,
+        background: value === 6
+          ? 'linear-gradient(135deg, #B8924A 0%, #8B6914 50%, #B8924A 100%)'
+          : 'linear-gradient(135deg, #E07A2C 0%, #C45A1C 50%, #E07A2C 100%)',
+        border: '3px solid rgba(255,255,255,0.3)',
+        boxShadow: `
+          inset 2px 2px 4px rgba(255,255,255,0.3),
+          inset -2px -2px 4px rgba(0,0,0,0.2),
+          4px 4px 8px rgba(0,0,0,0.3)
+        `,
+      }}
+    >
+      {/* Dice pips */}
+      {pips.map((pip, i) => (
+        <div
+          key={i}
+          className="absolute rounded-full"
+          style={{
+            width: pipSize,
+            height: pipSize,
+            left: `${pip.x}%`,
+            top: `${pip.y}%`,
+            transform: 'translate(-50%, -50%)',
+            background: 'radial-gradient(circle at 30% 30%, #ffffff 0%, #e0e0e0 100%)',
+            boxShadow: 'inset 1px 1px 2px rgba(0,0,0,0.3)',
+          }}
+        />
+      ))}
+
+      {/* Question mark when rolling */}
+      {value === null && (
+        <span className="text-white text-3xl font-bold" style={{ fontSize: size * 0.4 }}>?</span>
+      )}
+    </motion.button>
+  )
+}
+
+// Roll button when no value
+function RollButton({ size = 96, onClick, disabled }: {
+  size?: number
+  onClick: () => void
+  disabled: boolean
 }) {
   return (
     <motion.button
@@ -25,15 +97,36 @@ function DiceFace({ value, onClick, selected, disabled }: {
       whileHover={!disabled ? { scale: 1.1 } : undefined}
       whileTap={!disabled ? { scale: 0.95 } : undefined}
       className={`
-        w-16 h-16 rounded-xl text-white text-3xl font-bold
-        shadow-lg border-4 flex items-center justify-center
+        relative rounded-xl shadow-lg
+        flex items-center justify-center
         transition-all
-        ${selected ? 'border-gold ring-4 ring-gold/50' : 'border-white/20'}
-        ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-        ${value === 6 ? 'bg-gold' : 'bg-spice'}
+        ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}
       `}
+      style={{
+        width: size,
+        height: size,
+        background: disabled
+          ? 'linear-gradient(135deg, #C2956E 0%, #A67B5B 50%, #C2956E 100%)'
+          : 'linear-gradient(135deg, #E07A2C 0%, #C45A1C 50%, #E07A2C 100%)',
+        border: '3px solid rgba(255,255,255,0.3)',
+        boxShadow: `
+          inset 2px 2px 4px rgba(255,255,255,0.3),
+          inset -2px -2px 4px rgba(0,0,0,0.2),
+          4px 4px 8px rgba(0,0,0,0.3)
+        `,
+      }}
     >
-      {value}
+      {/* D6 icon with dots pattern */}
+      <svg width={size * 0.6} height={size * 0.6} viewBox="0 0 24 24" fill="none">
+        <rect x="2" y="2" width="20" height="20" rx="3" fill="rgba(255,255,255,0.2)" stroke="white" strokeWidth="1.5" />
+        {/* 6 pips pattern */}
+        <circle cx="7" cy="7" r="2" fill="white" />
+        <circle cx="17" cy="7" r="2" fill="white" />
+        <circle cx="7" cy="12" r="2" fill="white" />
+        <circle cx="17" cy="12" r="2" fill="white" />
+        <circle cx="7" cy="17" r="2" fill="white" />
+        <circle cx="17" cy="17" r="2" fill="white" />
+      </svg>
     </motion.button>
   )
 }
@@ -52,7 +145,7 @@ export function Dice({ state, dispatch }: DiceProps) {
 
   const rollDice = () => {
     if (state.isRolling || state.phase !== 'playing') return
-    if (state.pendingWormChoice || state.pendingAtreidesChoice || state.pendingHarkonnenSabotage) return
+    if (state.pendingAtreidesChoice || state.harkonnenAttackResult) return
 
     dispatch({ type: 'ROLL_DICE' })
 
@@ -67,51 +160,8 @@ export function Dice({ state, dispatch }: DiceProps) {
     }, TIMING.diceRoll)
   }
 
-  const hasPendingChoice = state.pendingWormChoice || state.pendingAtreidesChoice || state.pendingHarkonnenSabotage
+  const hasPendingChoice = state.pendingAtreidesChoice || state.harkonnenAttackResult
   const canRoll = state.phase === 'playing' && !state.isRolling && !hasPendingChoice
-
-  // Fremen Worm Choice UI
-  if (state.pendingWormChoice) {
-    const currentPlayer = state.players[state.currentPlayerIndex]
-    const factionData = getFactionData('fremen')
-
-    return (
-      <div className="fixed bottom-8 right-8 flex flex-col items-center gap-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-sand/90 border-2 border-fremen rounded-xl p-6 shadow-2xl max-w-xs"
-        >
-          <div className="text-center">
-            <div className="text-lg font-bold" style={{ color: factionData.color }}>
-              Worm Rider
-            </div>
-            <p className="text-sm text-shadow/80 mt-2">
-              You landed on a sandworm! Use your Fremen ability to ride it forward instead of falling back?
-            </p>
-            <div className="flex gap-3 mt-4 justify-center">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => dispatch({ type: 'FREMEN_CHOICE', rideWorm: true })}
-                className="px-4 py-2 bg-fremen text-white font-semibold rounded-lg"
-              >
-                Ride Forward
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => dispatch({ type: 'FREMEN_CHOICE', rideWorm: false })}
-                className="px-4 py-2 bg-sand border border-shadow/30 text-shadow font-semibold rounded-lg"
-              >
-                Take the Fall
-              </motion.button>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    )
-  }
 
   // Atreides Prescience Choice UI
   if (state.pendingAtreidesChoice) {
@@ -133,13 +183,15 @@ export function Dice({ state, dispatch }: DiceProps) {
               Choose which die to play:
             </p>
             <div className="flex gap-4 justify-center">
-              <DiceFace
+              <D6Face
                 value={dice1}
                 onClick={() => dispatch({ type: 'ATREIDES_CHOICE', chosenValue: dice1 })}
+                highlight={dice1 === 6}
               />
-              <DiceFace
+              <D6Face
                 value={dice2}
                 onClick={() => dispatch({ type: 'ATREIDES_CHOICE', chosenValue: dice2 })}
+                highlight={dice2 === 6}
               />
             </div>
           </div>
@@ -148,44 +200,37 @@ export function Dice({ state, dispatch }: DiceProps) {
     )
   }
 
-  // Harkonnen Sabotage Choice UI
-  if (state.pendingHarkonnenSabotage) {
+  // Harkonnen Attack Result UI
+  if (state.harkonnenAttackResult) {
+    const factionData = getFactionData('harkonnen')
     const opponentIndex = state.currentPlayerIndex === 0 ? 1 : 0
     const opponent = state.players[opponentIndex]
-    const factionData = getFactionData('harkonnen')
 
     return (
       <div className="fixed bottom-8 right-8 flex flex-col items-center gap-4">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-sand/90 border-2 border-harkonnen rounded-xl p-6 shadow-2xl max-w-xs"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-sand/90 border-2 border-harkonnen rounded-xl p-6 shadow-2xl"
         >
           <div className="text-center">
             <div className="text-lg font-bold" style={{ color: factionData.color }}>
-              Sabotage
+              Sabotage!
             </div>
-            <p className="text-sm text-shadow/80 mt-2">
-              {opponent.name} rolled a {state.lastOpponentRoll}. Force them to reroll?
+            <div className="flex justify-center mt-3 mb-2">
+              <D6Face value={state.harkonnenAttackResult} size={56} />
+            </div>
+            <p className="text-sm text-shadow/60 mt-2">
+              {opponent.name} pushed back to position {opponent.position}
             </p>
-            <div className="flex gap-3 mt-4 justify-center">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => dispatch({ type: 'HARKONNEN_SABOTAGE' })}
-                className="px-4 py-2 bg-harkonnen text-white font-semibold rounded-lg"
-              >
-                Sabotage!
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => dispatch({ type: 'HARKONNEN_DECLINE' })}
-                className="px-4 py-2 bg-sand border border-shadow/30 text-shadow font-semibold rounded-lg"
-              >
-                Let it Stand
-              </motion.button>
-            </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => dispatch({ type: 'DISMISS_HARKONNEN_RESULT' })}
+              className="mt-4 px-6 py-2 bg-harkonnen text-white font-semibold rounded-lg"
+            >
+              Continue
+            </motion.button>
           </div>
         </motion.div>
       </div>
@@ -210,33 +255,30 @@ export function Dice({ state, dispatch }: DiceProps) {
       </AnimatePresence>
 
       {/* Dice */}
-      <motion.button
-        onClick={rollDice}
-        disabled={!canRoll}
-        animate={
-          state.isRolling
-            ? {
-                rotate: [0, 360, 720, 1080],
-                scale: [1, 1.1, 0.9, 1],
-              }
-            : {}
-        }
-        transition={{
-          duration: TIMING.diceRoll / 1000,
-          ease: 'easeOut',
-        }}
-        whileHover={canRoll ? { scale: 1.1 } : undefined}
-        whileTap={canRoll ? { scale: 0.9 } : undefined}
-        className={`
-          w-24 h-24 rounded-xl text-white text-4xl font-bold
-          shadow-lg border-4 border-white/20
-          flex items-center justify-center
-          ${canRoll ? 'bg-spice cursor-pointer' : 'bg-sand cursor-not-allowed'}
-          ${state.diceValue === 6 ? 'ring-4 ring-gold ring-opacity-75' : ''}
-        `}
-      >
-        {state.isRolling ? '?' : state.diceValue ?? 'Roll'}
-      </motion.button>
+      {state.diceValue || state.isRolling ? (
+        <motion.div
+          animate={
+            state.isRolling
+              ? {
+                  rotate: [0, 360, 720, 1080],
+                  scale: [1, 1.1, 0.9, 1],
+                }
+              : {}
+          }
+          transition={{
+            duration: TIMING.diceRoll / 1000,
+            ease: 'easeOut',
+          }}
+        >
+          <D6Face
+            value={state.isRolling ? null : state.diceValue}
+            size={96}
+            highlight={state.diceValue === 6}
+          />
+        </motion.div>
+      ) : (
+        <RollButton size={96} onClick={rollDice} disabled={!canRoll} />
+      )}
 
       {/* Roll instruction */}
       {canRoll && !state.diceValue && (

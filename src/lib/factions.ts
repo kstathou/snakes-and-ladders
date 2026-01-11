@@ -21,14 +21,14 @@ export const FACTIONS: Record<Faction, FactionData> = {
     name: 'House Harkonnen',
     color: COLORS.harkonnen,
     abilityName: 'Sabotage',
-    abilityDescription: 'Force opponent to reroll their dice (must keep new result)',
-    abilityTiming: 'after_opponent_roll',
+    abilityDescription: 'When within 6 squares of opponent, roll a die to push them back',
+    abilityTiming: 'before_roll',
   },
   fremen: {
     name: 'Fremen',
     color: COLORS.fremen,
     abilityName: 'Worm Rider',
-    abilityDescription: 'When landing on sandworm, ride it forward instead of backward',
+    abilityDescription: 'First time landing on a sandworm, stay at the head instead of sliding down',
     abilityTiming: 'on_worm',
   },
   sardaukar: {

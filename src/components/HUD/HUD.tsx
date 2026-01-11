@@ -10,10 +10,33 @@ interface HUDProps {
   playerIndex: 0 | 1
 }
 
+// Check if Harkonnen can use their ability
+function canHarkonnenAttack(state: GameState, playerIndex: 0 | 1): boolean {
+  const player = state.players[playerIndex]
+  if (player.faction !== 'harkonnen' || player.abilityUsed) return false
+  if (state.currentPlayerIndex !== playerIndex) return false
+  if (state.phase !== 'playing') return false
+
+  const opponentIndex = playerIndex === 0 ? 1 : 0
+  const opponent = state.players[opponentIndex]
+
+  // Both players must be on the board and within 6 squares
+  if (player.position === 0 || opponent.position === 0) return false
+  return Math.abs(player.position - opponent.position) <= 6
+}
+
 export function HUD({ state, dispatch, playerIndex }: HUDProps) {
   const player = state.players[playerIndex]
   const isCurrentPlayer = state.currentPlayerIndex === playerIndex
   const factionData = player.faction ? getFactionData(player.faction) : null
+
+  const harkonnenCanAttack = canHarkonnenAttack(state, playerIndex)
+
+  const handleAbilityClick = () => {
+    if (harkonnenCanAttack) {
+      dispatch({ type: 'USE_ABILITY', playerIndex })
+    }
+  }
 
   return (
     <motion.div
@@ -76,6 +99,35 @@ export function HUD({ state, dispatch, playerIndex }: HUDProps) {
           <p className="text-xs text-shadow/60 mt-1 leading-relaxed">
             {factionData.abilityDescription}
           </p>
+
+          {/* Harkonnen attack button */}
+          {player.faction === 'harkonnen' && !player.abilityUsed && isCurrentPlayer && (
+            <motion.button
+              onClick={handleAbilityClick}
+              disabled={!harkonnenCanAttack}
+              animate={
+                harkonnenCanAttack
+                  ? {
+                      boxShadow: [
+                        '0 0 0 0 rgba(139, 0, 0, 0)',
+                        '0 0 0 8px rgba(139, 0, 0, 0.3)',
+                        '0 0 0 0 rgba(139, 0, 0, 0)',
+                      ],
+                    }
+                  : {}
+              }
+              transition={{ repeat: Infinity, duration: 2 }}
+              className={`
+                mt-3 w-full px-3 py-2 rounded-lg text-sm font-semibold
+                transition-all
+                ${harkonnenCanAttack
+                  ? 'bg-harkonnen text-white cursor-pointer hover:bg-harkonnen/80'
+                  : 'bg-sand/30 text-shadow/40 cursor-not-allowed'}
+              `}
+            >
+              {harkonnenCanAttack ? 'Attack!' : 'Not in range'}
+            </motion.button>
+          )}
         </div>
       )}
     </motion.div>

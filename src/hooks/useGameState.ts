@@ -20,18 +20,17 @@ export const initialState: GameState = {
   bonusRollPending: false,
   isRolling: false,
   winner: null,
-  pendingWormChoice: false,
   pendingAtreidesChoice: null,
-  pendingHarkonnenSabotage: false,
-  lastOpponentRoll: null,
+  harkonnenAttackResult: null,
+}
+
+// Helper to check if player is within N squares of opponent
+function isWithinSquares(player1Pos: number, player2Pos: number, distance: number): boolean {
+  return Math.abs(player1Pos - player2Pos) <= distance && player1Pos > 0 && player2Pos > 0
 }
 
 // Helper to apply dice value and move player
-function applyDiceMove(
-  state: GameState,
-  value: number,
-  skipWormCheck = false
-): GameState {
+function applyDiceMove(state: GameState, value: number): GameState {
   const currentPlayer = state.players[state.currentPlayerIndex]
 
   // Apply Sardaukar +2 bonus
@@ -52,35 +51,51 @@ function applyDiceMove(
   const newPosition = currentPlayer.position + finalValue
   const { finalPosition, wormTriggered } = calculateFinalPosition(newPosition)
 
-  // Check for Fremen worm choice
+  // Check for Fremen worm immunity
+  let actualFinalPosition = finalPosition
   if (
     wormTriggered &&
-    !skipWormCheck &&
     currentPlayer.faction === 'fremen' &&
     !currentPlayer.abilityUsed
   ) {
+    // Fremen stays at worm head instead of sliding down
+    actualFinalPosition = newPosition
     const players = [...state.players] as [Player, Player]
     players[state.currentPlayerIndex] = {
       ...players[state.currentPlayerIndex],
-      position: newPosition, // Store pre-worm position temporarily
+      position: actualFinalPosition,
+      abilityUsed: true,
     }
+
+    // Check for win
+    if (actualFinalPosition >= BOARD.totalSquares) {
+      return {
+        ...state,
+        players,
+        diceValue: finalValue,
+        isRolling: false,
+        phase: 'victory',
+        winner: state.currentPlayerIndex,
+      }
+    }
+
     return {
       ...state,
       players,
       diceValue: finalValue,
       isRolling: false,
-      pendingWormChoice: true,
+      bonusRollPending: finalValue === 6,
     }
   }
 
   const players = [...state.players] as [Player, Player]
   players[state.currentPlayerIndex] = {
     ...players[state.currentPlayerIndex],
-    position: finalPosition,
+    position: actualFinalPosition,
   }
 
   // Check for win
-  if (finalPosition >= BOARD.totalSquares) {
+  if (actualFinalPosition >= BOARD.totalSquares) {
     return {
       ...state,
       players,
@@ -91,31 +106,12 @@ function applyDiceMove(
     }
   }
 
-  // Check if opponent is Harkonnen and can sabotage
-  const opponentIndex = state.currentPlayerIndex === 0 ? 1 : 0
-  const opponent = state.players[opponentIndex]
-  if (
-    opponent.faction === 'harkonnen' &&
-    !opponent.abilityUsed
-  ) {
-    return {
-      ...state,
-      players,
-      diceValue: finalValue,
-      isRolling: false,
-      bonusRollPending: false,
-      lastOpponentRoll: finalValue,
-      pendingHarkonnenSabotage: true,
-    }
-  }
-
   return {
     ...state,
     players,
     diceValue: finalValue,
     isRolling: false,
     bonusRollPending: finalValue === 6,
-    lastOpponentRoll: null,
   }
 }
 
@@ -192,109 +188,62 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       )
     }
 
-    case 'HARKONNEN_SABOTAGE': {
-      // Harkonnen forces opponent to reroll
+    case 'HARKONNEN_ATTACK': {
+      const currentPlayer = state.players[state.currentPlayerIndex]
+      if (currentPlayer.faction !== 'harkonnen' || currentPlayer.abilityUsed) {
+        return state
+      }
+
       const opponentIndex = state.currentPlayerIndex === 0 ? 1 : 0
+      const opponent = state.players[opponentIndex]
+
+      // Check if within 6 squares
+      if (!isWithinSquares(currentPlayer.position, opponent.position, 6)) {
+        return state
+      }
+
+      // Roll a die for the attack
+      const attackRoll = Math.floor(Math.random() * 6) + 1
+
+      // Push opponent back (but not below 1)
+      const newOpponentPosition = Math.max(1, opponent.position - attackRoll)
+
       const players = [...state.players] as [Player, Player]
-      players[opponentIndex] = {
-        ...players[opponentIndex],
+      players[state.currentPlayerIndex] = {
+        ...currentPlayer,
         abilityUsed: true,
       }
-
-      // Revert the opponent's position back
-      const currentPlayer = state.players[state.currentPlayerIndex]
-      const revertedPosition = state.lastOpponentRoll
-        ? currentPlayer.position - state.lastOpponentRoll
-        : currentPlayer.position
-
-      players[state.currentPlayerIndex] = {
-        ...players[state.currentPlayerIndex],
-        position: Math.max(0, revertedPosition),
-      }
-
-      // Roll new dice for the sabotaged player
-      const newRoll = Math.floor(Math.random() * 6) + 1
-
-      // Apply the new roll
-      return applyDiceMove(
-        {
-          ...state,
-          players,
-          pendingHarkonnenSabotage: false,
-          lastOpponentRoll: null,
-        },
-        newRoll
-      )
-    }
-
-    case 'HARKONNEN_DECLINE': {
-      // Harkonnen chose not to sabotage, continue normal turn flow
-      const diceVal = state.diceValue ?? 0
-      return {
-        ...state,
-        pendingHarkonnenSabotage: false,
-        lastOpponentRoll: null,
-        bonusRollPending: diceVal === 6,
-      }
-    }
-
-    case 'FREMEN_CHOICE': {
-      const currentPlayer = state.players[state.currentPlayerIndex]
-      const players = [...state.players] as [Player, Player]
-
-      if (action.rideWorm) {
-        // Ride worm forward: add distance instead of subtract
-        const wormHead = currentPlayer.position
-        const { finalPosition: wormTail } = calculateFinalPosition(wormHead)
-        const distance = wormHead - wormTail
-        const forwardPosition = Math.min(wormHead + distance, BOARD.totalSquares)
-
-        players[state.currentPlayerIndex] = {
-          ...currentPlayer,
-          position: forwardPosition,
-          abilityUsed: true,
-        }
-
-        if (forwardPosition >= BOARD.totalSquares) {
-          return {
-            ...state,
-            players,
-            pendingWormChoice: false,
-            phase: 'victory',
-            winner: state.currentPlayerIndex,
-          }
-        }
-      } else {
-        // Take the fall
-        const { finalPosition } = calculateFinalPosition(currentPlayer.position)
-        players[state.currentPlayerIndex] = {
-          ...currentPlayer,
-          position: finalPosition,
-        }
+      players[opponentIndex] = {
+        ...opponent,
+        position: newOpponentPosition,
       }
 
       return {
         ...state,
         players,
-        pendingWormChoice: false,
-        bonusRollPending: state.diceValue === 6,
+        harkonnenAttackResult: attackRoll,
+      }
+    }
+
+    case 'DISMISS_HARKONNEN_RESULT': {
+      return {
+        ...state,
+        harkonnenAttackResult: null,
       }
     }
 
     case 'USE_ABILITY': {
-      // This action is now only used for manual ability activation
-      // Most abilities are auto-triggered at the right time
-      const players = [...state.players] as [Player, Player]
-      players[action.playerIndex] = {
-        ...players[action.playerIndex],
-        abilityUsed: true,
+      // This is now used for Harkonnen to trigger their attack
+      const player = state.players[action.playerIndex]
+      if (player.faction === 'harkonnen' && !player.abilityUsed) {
+        return gameReducer(state, { type: 'HARKONNEN_ATTACK' })
       }
-      return { ...state, players }
+      return state
     }
 
     case 'MOVE_COMPLETE': {
       // Don't complete move if there's a pending choice
-      if (state.pendingWormChoice || state.pendingAtreidesChoice || state.pendingHarkonnenSabotage) {
+      if (state.pendingAtreidesChoice || state.harkonnenAttackResult) {
         return state
       }
 
