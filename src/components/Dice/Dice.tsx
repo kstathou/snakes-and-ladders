@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { GameState, GameAction } from '@/types/game'
 import { TIMING } from '@/lib/constants'
@@ -11,28 +11,35 @@ interface DiceProps {
 }
 
 export function Dice({ state, dispatch }: DiceProps) {
-  const [isRolling, setIsRolling] = useState(false)
+  const rollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const moveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Cleanup timeouts on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (rollTimeoutRef.current) clearTimeout(rollTimeoutRef.current)
+      if (moveTimeoutRef.current) clearTimeout(moveTimeoutRef.current)
+    }
+  }, [])
 
   const rollDice = () => {
-    if (isRolling || state.phase !== 'playing') return
+    if (state.isRolling || state.phase !== 'playing') return
 
-    setIsRolling(true)
     dispatch({ type: 'ROLL_DICE' })
 
     // Simulate roll animation
-    setTimeout(() => {
+    rollTimeoutRef.current = setTimeout(() => {
       const value = Math.floor(Math.random() * 6) + 1
       dispatch({ type: 'SET_DICE_VALUE', value })
-      setIsRolling(false)
 
       // After movement completes, handle turn transition
-      setTimeout(() => {
+      moveTimeoutRef.current = setTimeout(() => {
         dispatch({ type: 'MOVE_COMPLETE' })
-      }, 500)
+      }, TIMING.moveComplete)
     }, TIMING.diceRoll)
   }
 
-  const canRoll = state.phase === 'playing' && !isRolling && !state.pendingWormChoice
+  const canRoll = state.phase === 'playing' && !state.isRolling && !state.pendingWormChoice
 
   return (
     <div className="fixed bottom-8 right-8 flex flex-col items-center gap-4">
@@ -55,7 +62,7 @@ export function Dice({ state, dispatch }: DiceProps) {
         onClick={rollDice}
         disabled={!canRoll}
         animate={
-          isRolling
+          state.isRolling
             ? {
                 rotate: [0, 360, 720, 1080],
                 scale: [1, 1.1, 0.9, 1],
@@ -76,7 +83,7 @@ export function Dice({ state, dispatch }: DiceProps) {
           ${state.diceValue === 6 ? 'ring-4 ring-gold ring-opacity-75' : ''}
         `}
       >
-        {isRolling ? '?' : state.diceValue ?? 'Roll'}
+        {state.isRolling ? '?' : state.diceValue ?? 'Roll'}
       </motion.button>
 
       {/* Roll instruction */}

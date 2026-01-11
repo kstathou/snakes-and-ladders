@@ -18,6 +18,7 @@ export const TIMING = {
   wormEncounter: 1500,
   ornithopterFlight: 1800,
   victoryDelay: 2000,
+  moveComplete: 500,
 } as const
 
 // Board configuration
